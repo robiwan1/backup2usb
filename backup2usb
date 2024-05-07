@@ -4,6 +4,7 @@
 # LOG file is written to BACKUP-dir (v02)
 # 20171212,ha:first design
 # 20180109,ha:multiple partition handling
+# 20240507,ha:supress zenity Gtk-WARNING
 # USAGE: backup2usb [device|COMMAND]
 # 		  i.e sdb1
 #http://bernaerts.dyndns.org/linux/75-debian/54-debian-udev-backup
@@ -62,7 +63,7 @@ if [ "$DV" = "INSTALL" ];then
 fi
 DW=`echo $DV|cut -c-3`
 echo "waiting for MOUNT of $DW..." && sleep 16
-for DV in `cd /dev;ls -1 $DW?`;do
+for DV in `cd /dev;ls -1 $DW*`;do
    MP=`mount|grep $DV|cut -f3 -d\ `
    [ ! "$MP" ] && echo "Device $DV NOT MOUNTED" && continue
    echo searching $MP/$BD...
@@ -78,5 +79,5 @@ ERR=$?
 sync && echo "...FINISHED at `date +%F,%R`"
 export DISPLAY=:0 XAUTHORITY=/home/$USER/.Xauthority
 #notify-send "BACKUP finished!($ERR)"
-zenity --info --text "BACKUP finished!($ERR)"
+zenity --info --text "BACKUP finished!($ERR)" 2>/dev/null
 #zenity --notification --text "BACKUP finished!($ERR)"
