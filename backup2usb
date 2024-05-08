@@ -75,7 +75,9 @@ done
 [ ! -d "$MP/$BD/$USR" ] && mkdir $MP/$BD/$USR
 echo "STARTING incemential backup for user <$USR>..."
 for e in $EX `cat /home/$USR/.$PG 2>/dev/null`;do EXCLUDES="$EXCLUDES --exclude $e";done
-$DBG rsync -av --modify-window=1 $TRY $EXCLUDES /home/$USR/ $MP/$BD/$USR >$MP/$BD/$USR-`date +%g%m%d%H%M`.log 2>&1
+LOG=$MP/$BD/$USR-`date +%g%m%d%H%M`.log
+echo COMMAND: $0 $* >$LOG
+$DBG rsync -av --modify-window=1 $TRY $EXCLUDES /home/$USR/ $MP/$BD/$USR >>$LOG 2>&1
 ERR=$?
 echo COMMAND: $0 $* >>$MP/$BD/$USR-`date +%g%m%d%H%M`.log
 sync && echo "...FINISHED at `date +%F,%R`"
