@@ -9,6 +9,7 @@
 # 		  i.e sdb1
 #http://bernaerts.dyndns.org/linux/75-debian/54-debian-udev-backup
 #http://www.oehl.tv/udev-systemd/
+#https://github.com/robiwan1/backup2usb
 #TRY="--dry-run";DBG=echo
 #
 BD=BACKUP
@@ -47,7 +48,7 @@ if [ "$DV" = "INSTALL" ];then
    echo create UDEV ruleset $UB/$PG.rules
    [ "`whoami`" = "root" ] && OUT="command"
    udevadm info -a -n $DV|awk -v PG="$PG" '
-      BEGIN {printf "KERNEL==\"sd?1\", ACTION==\"add\", SUBSYSTEMS==\"usb\","}
+      BEGIN {printf "KERNEL==\"sd*\", ACTION==\"add\", SUBSYSTEMS==\"usb\","}
 #	/ATTRS{model}==/{printf $0","}
 #	/ATTRS{vendor}==/{v++;if(v<=1)printf $0","}
 #	/ATTRS{manufacturer}==/{m++;if(m<=1)printf $0","}
@@ -62,22 +63,22 @@ if [ "$DV" = "INSTALL" ];then
    exit
 fi
 DW=`echo $DV|cut -c-3`
-echo "waiting for MOUNT of $DW..." && sleep 16
+echo "WAITING for mount of $DW..." && sleep 16
 for DV in `cd /dev;ls -1 $DW*`;do
    MP=`mount|grep $DV|cut -f3 -d\ `
    [ ! "$MP" ] && echo "Device $DV NOT MOUNTED" && continue
-   echo searching $MP/$BD...
+   echo SEARCHING $MP/$BD...
    [ -d "$MP/$BD" ] && break
 done
 [ ! "$MP" ] && echo "$BD missing on device - exiting!" && exit
-[ ! "$USER" ] && USER=`echo $MP|cut -f3 -d/`
-[ ! -d "$MP/$BD/$USER" ] && mkdir $MP/$BD/$USER
-echo "STARTING incemential backup for user <$USER>..."
-for e in $EX `cat /home/$USER/.$PG 2>/dev/null`;do EXCLUDES="$EXCLUDES --exclude $e";done
-$DBG rsync -av --modify-window=1 $TRY $EXCLUDES /home/$USER/ $MP/$BD/$USER >$MP/$BD/$USER-`date +%g%m%d%H%M`.log 2>&1
+[ ! "$USR" ] && USR=`echo $MP|cut -f3 -d/`
+[ ! -d "$MP/$BD/$USR" ] && mkdir $MP/$BD/$USR
+echo "STARTING incemential backup for user <$USR>..."
+for e in $EX `cat /home/$USR/.$PG 2>/dev/null`;do EXCLUDES="$EXCLUDES --exclude $e";done
+$DBG rsync -av --modify-window=1 $TRY $EXCLUDES /home/$USR/ $MP/$BD/$USR >$MP/$BD/$USR-`date +%g%m%d%H%M`.log 2>&1
 ERR=$?
 sync && echo "...FINISHED at `date +%F,%R`"
-export DISPLAY=:0 XAUTHORITY=/home/$USER/.Xauthority
+export DISPLAY=:0 XAUTHORITY=/home/$USR/.Xauthority
 #notify-send "BACKUP finished!($ERR)"
 zenity --info --text "BACKUP finished!($ERR)" 2>/dev/null
 #zenity --notification --text "BACKUP finished!($ERR)"
