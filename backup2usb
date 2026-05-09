@@ -5,6 +5,8 @@
 # 20171212,ha:first design
 # 20180109,ha:multiple partition handling
 # 20240507,ha:supress zenity Gtk-WARNING
+# 20251125,ha:write LOG to /tmp, than move
+# 20260507,ha:media mountpoint changed in 26.04
 # USAGE: backup2usb [device|COMMAND]
 # 		  i.e sdb1
 #http://bernaerts.dyndns.org/linux/75-debian/54-debian-udev-backup
@@ -71,15 +73,16 @@ for DV in `cd /dev;ls -1 $DW*`;do
    [ -d "$MP/$BD" ] && break
 done
 [ ! "$MP" ] && echo "$BD missing on device - exiting!" && exit
-[ ! "$USR" ] && USR=`echo $MP|cut -f3 -d/`
+[ ! "$USR" ] && USR=`echo $MP|cut -f4 -d/`
 [ ! -d "$MP/$BD/$USR" ] && mkdir $MP/$BD/$USR
 echo "STARTING incemential backup for user <$USR>..."
 for e in $EX `cat /home/$USR/.$PG 2>/dev/null`;do EXCLUDES="$EXCLUDES --exclude $e";done
-LOG=$MP/$BD/$USR-`date +%g%m%d%H%M`.log
+#LOG=$MP/$BD/$USR-`date +%g%m%d%H%M`.log 
+LOG=$USR-`date +%g%m%d%H%M`.log 
 echo COMMAND: $0 $* >$LOG
-$DBG rsync -av --modify-window=1 $TRY $EXCLUDES /home/$USR/ $MP/$BD/$USR >>$LOG 2>&1
+$DBG rsync -av --modify-window=1 $TRY $EXCLUDES /home/$USR/ $MP/$BD/$USR >>/tmp/$LOG 2>&1
 ERR=$?
-echo COMMAND: $0 $* >>$MP/$BD/$USR-`date +%g%m%d%H%M`.log
+mv /tmp/$LOG $MP/$BD/.
 sync && echo "...FINISHED at `date +%F,%R`"
 export DISPLAY=:0 XAUTHORITY=/home/$USR/.Xauthority
 #notify-send "BACKUP finished!($ERR)"
